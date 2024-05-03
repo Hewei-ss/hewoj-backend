@@ -165,6 +165,7 @@ public class QuestionController {
         long size = commentQueryRequest.getPageSize();
         ThrowUtils.throwIf(size > 20, ResponseCodeEnum.PARAMS_ERROR);
         PageResponse page=commentAnswerService.listConmmentByPage(current,size,commentQueryRequest.getAnswerId());
+        return ResultUtils.success(page);
     }
 
     /**
