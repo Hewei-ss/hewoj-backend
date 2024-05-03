@@ -13,7 +13,7 @@ import java.util.List;
  */
 
 // todo bug埋点
-//@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(callSuper = true)
 @Data
 // todo 在哪里会用到序列化
 public class QuestionQueryRequest extends PageRequest implements Serializable {

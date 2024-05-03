@@ -72,9 +72,10 @@ public class JudgeServiceImpl implements JudgeService {
         String code=questionSubmit.getCode();
         //获取输入样例
         String judgeCaseStr= question.getJudgeCase();
-            List<JudgeCase> judgeCaseList = JSONUtil.toList(judgeCaseStr, JudgeCase.class);
-        // todo java的流操作
-        List<String> inputList = judgeCaseList.stream().map(JudgeCase::getInput).collect(Collectors.toList());
+        List<JudgeCase> judgeCaseList = JSONUtil.toList(judgeCaseStr, JudgeCase.class);
+
+        List<String> inputList=judgeCaseList.stream().map(JudgeCase::getInput).collect(Collectors.toList());
+        //调用沙箱请求对象
         ExecuteCodeRequest executeCodeRequest = ExecuteCodeRequest.builder()
                 .code(code)
                 .language(language)

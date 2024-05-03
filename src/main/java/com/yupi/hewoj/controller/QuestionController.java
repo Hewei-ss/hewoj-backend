@@ -5,22 +5,23 @@ import com.google.gson.Gson;
 import com.yupi.hewoj.annotation.AuthCheck;
 import com.yupi.hewoj.common.BaseResponse;
 import com.yupi.hewoj.common.DeleteRequest;
-import com.yupi.hewoj.model.enums.ResponseCodeEnum;
+import com.yupi.hewoj.common.PageResponse;
 import com.yupi.hewoj.common.ResultUtils;
 import com.yupi.hewoj.constant.UserConstant;
 import com.yupi.hewoj.exception.BusinessException;
 import com.yupi.hewoj.exception.ThrowUtils;
+import com.yupi.hewoj.model.dto.answer.AnswerAddRequest;
+import com.yupi.hewoj.model.dto.answer.AnswerQueryRequest;
+import com.yupi.hewoj.model.dto.comment.CommentAddRequest;
+import com.yupi.hewoj.model.dto.comment.CommentQueryRequest;
 import com.yupi.hewoj.model.dto.question.*;
 import com.yupi.hewoj.model.dto.questionsubmit.QuestionSubmitAddRequest;
 import com.yupi.hewoj.model.dto.questionsubmit.QuestionSubmitQueryRequest;
-import com.yupi.hewoj.model.entity.Question;
-import com.yupi.hewoj.model.entity.QuestionSubmit;
-import com.yupi.hewoj.model.entity.User;
+import com.yupi.hewoj.model.entity.*;
+import com.yupi.hewoj.model.enums.ResponseCodeEnum;
 import com.yupi.hewoj.model.vo.QuestionSubmitVO;
 import com.yupi.hewoj.model.vo.QuestionVO;
-import com.yupi.hewoj.service.QuestionService;
-import com.yupi.hewoj.service.QuestionSubmitService;
-import com.yupi.hewoj.service.UserService;
+import com.yupi.hewoj.service.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
@@ -31,7 +32,6 @@ import java.util.List;
 
 /**
  * 题目接口
- *
  */
 @RestController
 @RequestMapping("/question")
@@ -46,6 +46,12 @@ public class QuestionController {
     @Resource
     private QuestionSubmitService questionsubmitbService;
 
+
+    @Resource
+    private QuestionAnswerService questionAnswerService;
+
+    @Resource
+    private CommentAnswerService commentAnswerService;
 
     private final static Gson GSON = new Gson();
 
@@ -82,12 +88,129 @@ public class QuestionController {
         question.setUserId(loginUser.getId());
         question.setFavourNum(0);
         question.setThumbNum(0);
-        // todo 这里没有设置时间，但是数据库中有，mybatis-plus的save方法能自动插入时间吗？实现过程？？
         boolean result = questionService.save(question);
         ThrowUtils.throwIf(!result, ResponseCodeEnum.OPERATION_ERROR);
         long newQuestionId = question.getId();
         return ResultUtils.success(newQuestionId);
     }
+
+
+    /**
+     * 添加题解
+     *
+     * @param answerAddRequest
+     * @return
+     */
+    @PostMapping("/addAswer")
+    public BaseResponse<Long> addAnswer(@RequestBody AnswerAddRequest answerAddRequest) {
+        if (answerAddRequest == null) {
+            throw new BusinessException(ResponseCodeEnum.PARAMS_ERROR);
+        }
+        QuestionAnswer answer = new QuestionAnswer();
+        BeanUtils.copyProperties(answerAddRequest, answer);
+        questionAnswerService.save(answer);
+        return ResultUtils.success(answer.getId());
+    }
+
+
+    /**
+     * 提交评论
+     *
+     * @param commentAddRequest
+     * @return
+     */
+    @PostMapping("/addComment")
+    public BaseResponse<Long> addComment(@RequestBody CommentAddRequest commentAddRequest) {
+        if (commentAddRequest == null) {
+            throw new BusinessException(ResponseCodeEnum.PARAMS_ERROR);
+        }
+        CommentAnswer comment = new CommentAnswer();
+        BeanUtils.copyProperties(commentAddRequest, comment);
+        commentAnswerService.save(comment);
+        return ResultUtils.success(comment.getId());
+    }
+
+
+    /**
+     * 分页获取题解
+     * @param answerQueryRequest
+     * @return
+     */
+    @PostMapping("/answer/list/page/")
+    public BaseResponse<Page<QuestionAnswer>> getAnswerByQuestionId(@RequestBody AnswerQueryRequest answerQueryRequest) {
+        if (answerQueryRequest.getQuestionId() < 0) {
+            throw new BusinessException(ResponseCodeEnum.PARAMS_ERROR);
+        }
+
+        long current = answerQueryRequest.getCurrent();
+        long size = answerQueryRequest.getPageSize();
+        ThrowUtils.throwIf(size > 20, ResponseCodeEnum.PARAMS_ERROR);
+        Page<QuestionAnswer> questionAnswerPage = questionAnswerService.page(new Page<>(), questionAnswerService.getQueryWrapper(answerQueryRequest));
+        return ResultUtils.success(questionAnswerPage);
+    }
+
+
+    /**
+     * 根据题解id获取主评论分页信息
+     * @param commentQueryRequest
+     * @return
+     */
+    @GetMapping("/list/page/comment")
+    public BaseResponse<PageResponse> listConmmentByPage(@RequestBody CommentQueryRequest commentQueryRequest){
+        if (commentQueryRequest.getAnswerId() < 0) {
+            throw new BusinessException(ResponseCodeEnum.PARAMS_ERROR);
+        }
+
+        long current = commentQueryRequest.getCurrent();
+        long size = commentQueryRequest.getPageSize();
+        ThrowUtils.throwIf(size > 20, ResponseCodeEnum.PARAMS_ERROR);
+        PageResponse page=commentAnswerService.listConmmentByPage(current,size,commentQueryRequest.getAnswerId());
+    }
+
+    /**
+     * 分页获取列表（封装类）
+     *
+     * @param questionQueryRequest
+     * @param request
+     * @return
+     */
+    @PostMapping("/list/page/vo")
+    public BaseResponse<Page<QuestionVO>> listQuestionVOByPage(@RequestBody QuestionQueryRequest questionQueryRequest, HttpServletRequest request) {
+
+        //当前要返回的页码
+        long current = questionQueryRequest.getCurrent();
+        //页面大小
+        long size = questionQueryRequest.getPageSize();
+        // 限制爬虫
+        ThrowUtils.throwIf(size > 20, ResponseCodeEnum.PARAMS_ERROR);
+        Page<Question> questionPage = questionService.page(new Page<>(current, size),
+                questionService.getQueryWrapper(questionQueryRequest));
+        return ResultUtils.success(questionService.getQuestionVOPage(questionPage, request));
+    }
+
+    /**
+     * 根据 id 获取不脱敏的数据
+     *
+     * @param id
+     * @return
+     */
+    @GetMapping("/get")
+    public BaseResponse<Question> getQuestionById(long id, HttpServletRequest request) {
+        if (id <= 0) {
+            throw new BusinessException(ResponseCodeEnum.PARAMS_ERROR);
+        }
+        Question question = questionService.getById(id);
+        if (question == null) {
+            throw new BusinessException(ResponseCodeEnum.NOT_FOUND_ERROR);
+        }
+        User loginUser = userService.getLoginUser(request);
+        // 不是本人或管理员，不能直接获取所有信息
+        if (!question.getUserId().equals(loginUser.getId()) && !userService.isAdmin(loginUser)) {
+            throw new BusinessException(ResponseCodeEnum.NO_AUTH_ERROR);
+        }
+        return ResultUtils.success(question);
+    }
+
 
     /**
      * 删除
@@ -148,51 +271,6 @@ public class QuestionController {
         ThrowUtils.throwIf(oldQuestion == null, ResponseCodeEnum.NOT_FOUND_ERROR);
         boolean result = questionService.updateById(question);
         return ResultUtils.success(result);
-    }
-
-
-    /**
-     * 根据 id 获取不脱敏的数据
-     *
-     * @param id
-     * @return
-     */
-    @GetMapping("/get")
-    public BaseResponse<Question> getQuestionById(long id, HttpServletRequest request) {
-        if (id <= 0) {
-            throw new BusinessException(ResponseCodeEnum.PARAMS_ERROR);
-        }
-        Question question = questionService.getById(id);
-        if (question == null) {
-            throw new BusinessException(ResponseCodeEnum.NOT_FOUND_ERROR);
-        }
-        User loginUser = userService.getLoginUser(request);
-        // 不是本人或管理员，不能直接获取所有信息
-        if (!question.getUserId().equals(loginUser.getId()) && !userService.isAdmin(loginUser)) {
-            throw new BusinessException(ResponseCodeEnum.NO_AUTH_ERROR);
-        }
-        return ResultUtils.success(question);
-    }
-
-    /**
-     * 分页获取列表（封装类）
-     *
-     * @param questionQueryRequest
-     * @param request
-     * @return
-     */
-    @PostMapping("/list/page/vo")
-    public BaseResponse<Page<QuestionVO>> listQuestionVOByPage(@RequestBody QuestionQueryRequest questionQueryRequest, HttpServletRequest request) {
-
-        //当前要返回的页码
-        long current = questionQueryRequest.getCurrent();
-        //页面大小
-        long size = questionQueryRequest.getPageSize();
-        // 限制爬虫
-        ThrowUtils.throwIf(size > 20, ResponseCodeEnum.PARAMS_ERROR);
-        Page<Question> questionPage = questionService.page(new Page<>(current, size),
-                questionService.getQueryWrapper(questionQueryRequest));
-        return ResultUtils.success(questionService.getQuestionVOPage(questionPage, request));
     }
 
 

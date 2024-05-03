@@ -134,6 +134,13 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question>
         return questionVO;
     }
 
+
+    /**
+     * 将分页查找返回的数据脱敏
+     * @param questionPage
+     * @param request
+     * @return
+     */
     @Override
     public Page<QuestionVO> getQuestionVOPage(Page<Question> questionPage, HttpServletRequest request) {
         List<Question> questionList = questionPage.getRecords();
@@ -141,11 +148,11 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question>
         if (CollectionUtils.isEmpty(questionList)) {
             return questionVOPage;
         }
-        // 1. 关联查询用户信息
+        // 该页中的问题船舰者的列表
         Set<Long> userIdSet = questionList.stream().map(Question::getUserId).collect(Collectors.toSet());
+        //从数据库中查询到上面列表中列出的用户信息
         Map<Long, List<User>> userIdUserListMap = userService.listByIds(userIdSet).stream()
                 .collect(Collectors.groupingBy(User::getId));
-        // 填充信息
         List<QuestionVO> questionVOList = questionList.stream().map(question -> {
             QuestionVO questionVO = QuestionVO.objToVo(question);
             Long userId = question.getUserId();
