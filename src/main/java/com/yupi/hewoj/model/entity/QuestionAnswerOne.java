@@ -1,5 +1,9 @@
 package com.yupi.hewoj.model.entity;
 
+/**
+ * 单表查询
+ */
+
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
@@ -7,7 +11,6 @@ import lombok.Data;
 
 import java.io.Serializable;
 import java.util.Date;
-import java.util.List;
 
 /**
  * 题目题解表
@@ -16,7 +19,7 @@ import java.util.List;
  */
 @TableName(value = "question_answer")
 @Data
-public class QuestionAnswer implements Serializable {
+public class QuestionAnswerOne implements Serializable {
     /**
      * id
      */
@@ -67,11 +70,6 @@ public class QuestionAnswer implements Serializable {
      * 更新时间
      */
     private Date updateTime;
-
-    /**
-     * 发表答案的用户
-     */
-    private User user;
 
 
     /**

@@ -1,11 +1,11 @@
 package com.yupi.hewoj.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.github.pagehelper.PageInfo;
 import com.google.gson.Gson;
 import com.yupi.hewoj.annotation.AuthCheck;
 import com.yupi.hewoj.common.BaseResponse;
 import com.yupi.hewoj.common.DeleteRequest;
-import com.yupi.hewoj.common.PageResponse;
 import com.yupi.hewoj.common.ResultUtils;
 import com.yupi.hewoj.constant.UserConstant;
 import com.yupi.hewoj.exception.BusinessException;
@@ -30,6 +30,8 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
+import static com.yupi.hewoj.constant.UserConstant.USER_LOGIN_STATE;
+
 /**
  * 题目接口
  */
@@ -52,6 +54,9 @@ public class QuestionController {
 
     @Resource
     private CommentAnswerService commentAnswerService;
+
+    @Resource
+    private CommentReplyService commentReplyService;
 
     private final static Gson GSON = new Gson();
 
@@ -106,7 +111,7 @@ public class QuestionController {
         if (answerAddRequest == null) {
             throw new BusinessException(ResponseCodeEnum.PARAMS_ERROR);
         }
-        QuestionAnswer answer = new QuestionAnswer();
+        QuestionAnswerOne answer = new QuestionAnswerOne();
         BeanUtils.copyProperties(answerAddRequest, answer);
         questionAnswerService.save(answer);
         return ResultUtils.success(answer.getId());
@@ -120,10 +125,12 @@ public class QuestionController {
      * @return
      */
     @PostMapping("/addComment")
-    public BaseResponse<Long> addComment(@RequestBody CommentAddRequest commentAddRequest) {
+    public BaseResponse<Long> addComment(@RequestBody CommentAddRequest commentAddRequest, HttpServletRequest httpServletRequest) {
         if (commentAddRequest == null) {
             throw new BusinessException(ResponseCodeEnum.PARAMS_ERROR);
         }
+        User user = (User) httpServletRequest.getSession().getAttribute(USER_LOGIN_STATE);
+        if (user == null) throw new BusinessException(ResponseCodeEnum.NOT_LOGIN_ERROR);
         CommentAnswer comment = new CommentAnswer();
         BeanUtils.copyProperties(commentAddRequest, comment);
         commentAnswerService.save(comment);
@@ -133,11 +140,12 @@ public class QuestionController {
 
     /**
      * 分页获取题解
+     *
      * @param answerQueryRequest
      * @return
      */
     @PostMapping("/answer/list/page/")
-    public BaseResponse<Page<QuestionAnswer>> getAnswerByQuestionId(@RequestBody AnswerQueryRequest answerQueryRequest) {
+    public BaseResponse<Page<QuestionAnswerOne>> getAnswerByQuestionId(@RequestBody AnswerQueryRequest answerQueryRequest) {
         if (answerQueryRequest.getQuestionId() < 0) {
             throw new BusinessException(ResponseCodeEnum.PARAMS_ERROR);
         }
@@ -145,48 +153,43 @@ public class QuestionController {
         long current = answerQueryRequest.getCurrent();
         long size = answerQueryRequest.getPageSize();
         ThrowUtils.throwIf(size > 20, ResponseCodeEnum.PARAMS_ERROR);
-        Page<QuestionAnswer> questionAnswerPage = questionAnswerService.page(new Page<>(), questionAnswerService.getQueryWrapper(answerQueryRequest));
+        Page<QuestionAnswerOne> questionAnswerPage = questionAnswerService.page(new Page<>(), questionAnswerService.getQueryWrapper(answerQueryRequest));
         return ResultUtils.success(questionAnswerPage);
     }
 
 
     /**
      * 根据题解id获取主评论分页信息
+     *
      * @param commentQueryRequest
      * @return
      */
-    @GetMapping("/list/page/comment")
-    public BaseResponse<PageResponse> listConmmentByPage(@RequestBody CommentQueryRequest commentQueryRequest){
+    @PostMapping("/list/page/comment")
+    public BaseResponse<PageInfo<CommentAnswer>> listConmmentByPage(@RequestBody CommentQueryRequest commentQueryRequest) {
         if (commentQueryRequest.getAnswerId() < 0) {
             throw new BusinessException(ResponseCodeEnum.PARAMS_ERROR);
         }
 
-        long current = commentQueryRequest.getCurrent();
-        long size = commentQueryRequest.getPageSize();
+        int current = commentQueryRequest.getCurrent();
+        int size = commentQueryRequest.getPageSize();
         ThrowUtils.throwIf(size > 20, ResponseCodeEnum.PARAMS_ERROR);
-        PageResponse page=commentAnswerService.listConmmentByPage(current,size,commentQueryRequest.getAnswerId());
+        PageInfo<CommentAnswer> page = commentAnswerService.listConmmentByPage(current, size, commentQueryRequest.getAnswerId());
         return ResultUtils.success(page);
     }
 
     /**
-     * 分页获取列表（封装类）
+     * 获取副评论
      *
-     * @param questionQueryRequest
-     * @param request
+     * @param replyCommentId
      * @return
      */
-    @PostMapping("/list/page/vo")
-    public BaseResponse<Page<QuestionVO>> listQuestionVOByPage(@RequestBody QuestionQueryRequest questionQueryRequest, HttpServletRequest request) {
-
-        //当前要返回的页码
-        long current = questionQueryRequest.getCurrent();
-        //页面大小
-        long size = questionQueryRequest.getPageSize();
-        // 限制爬虫
-        ThrowUtils.throwIf(size > 20, ResponseCodeEnum.PARAMS_ERROR);
-        Page<Question> questionPage = questionService.page(new Page<>(current, size),
-                questionService.getQueryWrapper(questionQueryRequest));
-        return ResultUtils.success(questionService.getQuestionVOPage(questionPage, request));
+    @GetMapping("/list/reply/comment")
+    public BaseResponse<List<CommentReply>> listReplyConmment(long replyCommentId) {
+        if (replyCommentId < 0) {
+            throw new BusinessException(ResponseCodeEnum.PARAMS_ERROR);
+        }
+        List<CommentReply> list = commentReplyService.replyCommentList(replyCommentId);
+        return ResultUtils.success(list);
     }
 
     /**
@@ -210,6 +213,42 @@ public class QuestionController {
             throw new BusinessException(ResponseCodeEnum.NO_AUTH_ERROR);
         }
         return ResultUtils.success(question);
+    }
+
+    /**
+     * 更具题解id获取题解
+     *
+     * @param answerId
+     * @return
+     */
+
+    @GetMapping("/answer/get")
+    public BaseResponse<QuestionAnswer> getAnswerById(Long answerId) {
+        if (answerId <= 0) throw new BusinessException(ResponseCodeEnum.PARAMS_ERROR);
+        QuestionAnswer questionAnswer = questionAnswerService.getAnswerByAnswerId(answerId);
+        if (questionAnswer == null) throw new BusinessException(ResponseCodeEnum.NOT_FOUND_ERROR);
+        return ResultUtils.success(questionAnswer);
+    }
+
+    /**
+     * 分页获取列表（封装类）
+     *
+     * @param questionQueryRequest
+     * @param request
+     * @return
+     */
+    @PostMapping("/list/page/vo")
+    public BaseResponse<Page<QuestionVO>> listQuestionVOByPage(@RequestBody QuestionQueryRequest questionQueryRequest, HttpServletRequest request) {
+
+        //当前要返回的页码
+        long current = questionQueryRequest.getCurrent();
+        //页面大小
+        long size = questionQueryRequest.getPageSize();
+        // 限制爬虫
+        ThrowUtils.throwIf(size > 20, ResponseCodeEnum.PARAMS_ERROR);
+        Page<Question> questionPage = questionService.page(new Page<>(current, size),
+                questionService.getQueryWrapper(questionQueryRequest));
+        return ResultUtils.success(questionService.getQuestionVOPage(questionPage, request));
     }
 
 

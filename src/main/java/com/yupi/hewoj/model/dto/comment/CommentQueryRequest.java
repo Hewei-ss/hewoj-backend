@@ -12,5 +12,8 @@ import java.io.Serializable;
 @Data
 public class CommentQueryRequest extends PageRequest implements Serializable {
     private Long answerId;
+    /**
+     * 被回复对象的id
+     */
     private static final long serialVersionUID = 1L;
 }

@@ -29,8 +29,8 @@ public class UserServiceTest {
 
     @Test
     void listConmmentByPage(){
-        List<CommentAnswer> list=commentAnswerMapper.listConmmentByPage(1);
-        System.out.println(list);
+//        List<CommentAnswer> list=commentAnswerMapper.listConmmentByPage(1);
+//        System.out.println(list);
     }
 
     @Test

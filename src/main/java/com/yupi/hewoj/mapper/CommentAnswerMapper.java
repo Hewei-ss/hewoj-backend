@@ -1,8 +1,8 @@
 package com.yupi.hewoj.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.yupi.hewoj.common.PageResponse;
 import com.yupi.hewoj.model.entity.CommentAnswer;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -13,8 +13,8 @@ import java.util.List;
 * @Entity generator.domain.CommentAnswer
 */
 public interface CommentAnswerMapper extends BaseMapper<CommentAnswer> {
-    PageResponse listConmmentByPage(long id);
-
+    List<CommentAnswer> listConmmentByPage(@Param("answerId") long id);
+    List<CommentAnswer> listFuConmment(@Param("answerId") long id,@Param("replyUserId") long replyUserId);
 }
 
 
