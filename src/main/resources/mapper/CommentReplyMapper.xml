@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yupi.hewoj.mapper.CommentReplyMapper">
+
+    <resultMap id="BaseResultMap" type="com.yupi.hewoj.model.entity.CommentReply">
+        <id property="id" column="id" jdbcType="BIGINT"/>
+        <result property="userId" column="userId" jdbcType="BIGINT"/>
+        <result property="replyContent" column="replyContent" jdbcType="VARCHAR"/>
+        <result property="targetCommentId" column="targetCommentId" jdbcType="BIGINT"/>
+        <result property="createTime" column="createTime" jdbcType="TIMESTAMP"/>
+        <result property="updateTime" column="updateTime" jdbcType="TIMESTAMP"/>
+        <result property="isDelete" column="isDelete" jdbcType="TINYINT"/>
+        <association property="user" javaType="com.yupi.hewoj.model.entity.User">
+            <result property="userName" column="userName" jdbcType="VARCHAR"/>
+        </association>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id
+        ,userId,replyContent,
+        targetCommentId,createTime,updateTime,
+        isDelete
+    </sql>
+
+    <select id="replyCommentList" resultMap="BaseResultMap">
+        select *
+        from comment_reply as t1,
+             user as t2
+             where t1.userId=t2.id and targetCommentId=#{targetCommentId}
+    </select>
+</mapper>

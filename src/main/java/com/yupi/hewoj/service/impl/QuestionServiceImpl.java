@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.google.gson.Gson;
+import com.yupi.hewoj.constant.RedisContant;
 import com.yupi.hewoj.model.enums.ResponseCodeEnum;
 import com.yupi.hewoj.exception.BusinessException;
 import com.yupi.hewoj.exception.ThrowUtils;
@@ -14,6 +15,7 @@ import com.yupi.hewoj.model.vo.UserVO;
 import com.yupi.hewoj.service.QuestionService;
 import com.yupi.hewoj.mapper.QuestionMapper;
 import com.yupi.hewoj.service.UserService;
+import com.yupi.hewoj.utils.CacheClient;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -21,6 +23,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -38,6 +41,10 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question>
 
     @Resource
     private QuestionMapper questionMapper;
+
+    @Resource
+    private CacheClient cacheClient;
+
 
     /**
      * 校验题目是否合法
@@ -165,6 +172,13 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question>
         }).collect(Collectors.toList());
         questionVOPage.setRecords(questionVOList);
         return questionVOPage;
+    }
+
+    @Override
+    public Question queryById(long id) {
+        Question question=cacheClient.queryWithPassThrough(RedisContant.REDIS_QUESTION_CACHE_KEY,id,Question.class,this::getById,20L, TimeUnit.MINUTES);
+       //  Question question=cacheClient.queryWithLogicalExpire(RedisContant.REDIS_QUESTION_CACHE_KEY,id,this::getById,Question.class,20L, TimeUnit.MINUTES);
+        return question;
     }
 
 }

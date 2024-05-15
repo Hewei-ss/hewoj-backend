@@ -7,6 +7,7 @@ import com.yupi.hewoj.annotation.AuthCheck;
 import com.yupi.hewoj.common.BaseResponse;
 import com.yupi.hewoj.common.DeleteRequest;
 import com.yupi.hewoj.common.ResultUtils;
+import com.yupi.hewoj.constant.RedisContant;
 import com.yupi.hewoj.constant.UserConstant;
 import com.yupi.hewoj.exception.BusinessException;
 import com.yupi.hewoj.exception.ThrowUtils;
@@ -22,14 +23,15 @@ import com.yupi.hewoj.model.enums.ResponseCodeEnum;
 import com.yupi.hewoj.model.vo.QuestionSubmitVO;
 import com.yupi.hewoj.model.vo.QuestionVO;
 import com.yupi.hewoj.service.*;
+import com.yupi.hewoj.utils.CacheClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
-
 import static com.yupi.hewoj.constant.UserConstant.USER_LOGIN_STATE;
 
 /**
@@ -59,6 +61,7 @@ public class QuestionController {
     private CommentReplyService commentReplyService;
 
     private final static Gson GSON = new Gson();
+
 
 
     /**
@@ -325,7 +328,7 @@ public class QuestionController {
         if (id <= 0) {
             throw new BusinessException(ResponseCodeEnum.PARAMS_ERROR);
         }
-        Question question = questionService.getById(id);
+        Question question = questionService.queryById(id);
         if (question == null) {
             throw new BusinessException(ResponseCodeEnum.NOT_FOUND_ERROR);
         }
