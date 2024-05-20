@@ -16,6 +16,7 @@ public enum ResponseCodeEnum {
     OPERATION_ERROR(50001, "操作失败"),
     API_REQUEST_ERROR(50010, "接口调用失败");
 
+
     /**
      * 状态码
      */
