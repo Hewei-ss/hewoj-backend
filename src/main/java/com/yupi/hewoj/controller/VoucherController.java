@@ -1,11 +1,18 @@
 package com.yupi.hewoj.controller;
 
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.yupi.hewoj.common.BaseResponse;
+import com.yupi.hewoj.common.PageRequest;
 import com.yupi.hewoj.common.ResultUtils;
+import com.yupi.hewoj.exception.ThrowUtils;
+import com.yupi.hewoj.model.dto.question.QuestionQueryRequest;
 import com.yupi.hewoj.model.dto.voucher.VoucherAddRequest;
+import com.yupi.hewoj.model.entity.Question;
 import com.yupi.hewoj.model.entity.SeckillVoucher;
 import com.yupi.hewoj.model.entity.Voucher;
+import com.yupi.hewoj.model.enums.ResponseCodeEnum;
+import com.yupi.hewoj.model.vo.QuestionVO;
 import com.yupi.hewoj.service.SeckillVoucherService;
 import com.yupi.hewoj.service.VoucherOrderService;
 import com.yupi.hewoj.service.VoucherService;
@@ -50,4 +57,19 @@ public class VoucherController {
         long orderId=voucherOrderService.seckillVoucher(voucherId,httpServletRequest);
         return ResultUtils.success(orderId);
     }
+
+//    @PostMapping("/list/page/")
+//    public BaseResponse<Page<Voucher>> listQuestionVOByPage(@RequestBody PageRequest pageRequest, HttpServletRequest request) {
+//
+//        //当前要返回的页码
+//        long current = pageRequest.getCurrent();
+//        //页面大小
+//        long size = pageRequest.getPageSize();
+//        // 限制爬虫
+//        ThrowUtils.throwIf(size > 20, ResponseCodeEnum.PARAMS_ERROR);
+//        Page<Voucher> voucherPage = voucherService.page(new Page<>(current, size),
+//                voucherService.getQueryWrapper(questionQueryRequest));
+//        return ResultUtils.success(questionService.getQuestionVOPage(questionPage, request));
+//    }
+
 }

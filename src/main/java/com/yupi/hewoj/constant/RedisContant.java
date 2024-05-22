@@ -13,6 +13,7 @@ public interface RedisContant {
      String SECKILL_STOCK_KEY = "seckill:stock:";
 
      String VOUCHER_ORDER="voucher:order:";
+     String VOUCHER_ORDER_LOCK="voucher:order:lock:";
 
 
 }
