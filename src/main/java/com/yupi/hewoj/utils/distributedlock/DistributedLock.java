@@ -2,6 +2,9 @@ package com.yupi.hewoj.utils.distributedlock;
 
 import java.util.concurrent.TimeUnit;
 
+/**
+ * 分布式锁
+ */
 public interface DistributedLock {
 
     /**

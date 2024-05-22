@@ -15,5 +15,7 @@ public interface VoucherOrderService extends IService<VoucherOrder> {
     
     long seckillVoucher(Long voucherId, HttpServletRequest httpServletRequest);
 
-    long createVoucherOrder(Long voucherId, SeckillVoucher seckillVoucher, Long userId);
+    void createVoucherOrder(VoucherOrder voucherOrder);
+
+//    long createVoucherOrder(Long voucherId, SeckillVoucher seckillVoucher, Long userId);
 }
