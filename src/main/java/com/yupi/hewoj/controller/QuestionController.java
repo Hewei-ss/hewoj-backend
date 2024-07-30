@@ -62,8 +62,6 @@ public class QuestionController {
 
     private final static Gson GSON = new Gson();
 
-
-
     /**
      * 创建
      *
@@ -103,97 +101,6 @@ public class QuestionController {
     }
 
 
-    /**
-     * 添加题解
-     *
-     * @param answerAddRequest
-     * @return
-     */
-    @PostMapping("/addAswer")
-    public BaseResponse<Long> addAnswer(@RequestBody AnswerAddRequest answerAddRequest) {
-        if (answerAddRequest == null) {
-            throw new BusinessException(ResponseCodeEnum.PARAMS_ERROR);
-        }
-        QuestionAnswerOne answer = new QuestionAnswerOne();
-        BeanUtils.copyProperties(answerAddRequest, answer);
-        questionAnswerService.save(answer);
-        return ResultUtils.success(answer.getId());
-    }
-
-
-    /**
-     * 提交评论
-     *
-     * @param commentAddRequest
-     * @return
-     */
-    @PostMapping("/addComment")
-    public BaseResponse<Long> addComment(@RequestBody CommentAddRequest commentAddRequest, HttpServletRequest httpServletRequest) {
-        if (commentAddRequest == null) {
-            throw new BusinessException(ResponseCodeEnum.PARAMS_ERROR);
-        }
-        User user = (User) httpServletRequest.getSession().getAttribute(USER_LOGIN_STATE);
-        if (user == null) throw new BusinessException(ResponseCodeEnum.NOT_LOGIN_ERROR);
-        CommentAnswer comment = new CommentAnswer();
-        BeanUtils.copyProperties(commentAddRequest, comment);
-        commentAnswerService.save(comment);
-        return ResultUtils.success(comment.getId());
-    }
-
-
-    /**
-     * 分页获取题解
-     *
-     * @param answerQueryRequest
-     * @return
-     */
-    @PostMapping("/answer/list/page/")
-    public BaseResponse<Page<QuestionAnswerOne>> getAnswerByQuestionId(@RequestBody AnswerQueryRequest answerQueryRequest) {
-        if (answerQueryRequest.getQuestionId() < 0) {
-            throw new BusinessException(ResponseCodeEnum.PARAMS_ERROR);
-        }
-
-        long current = answerQueryRequest.getCurrent();
-        long size = answerQueryRequest.getPageSize();
-        ThrowUtils.throwIf(size > 20, ResponseCodeEnum.PARAMS_ERROR);
-        Page<QuestionAnswerOne> questionAnswerPage = questionAnswerService.page(new Page<>(), questionAnswerService.getQueryWrapper(answerQueryRequest));
-        return ResultUtils.success(questionAnswerPage);
-    }
-
-
-    /**
-     * 根据题解id获取主评论分页信息
-     *
-     * @param commentQueryRequest
-     * @return
-     */
-    @PostMapping("/list/page/comment")
-    public BaseResponse<PageInfo<CommentAnswer>> listConmmentByPage(@RequestBody CommentQueryRequest commentQueryRequest) {
-        if (commentQueryRequest.getAnswerId() < 0) {
-            throw new BusinessException(ResponseCodeEnum.PARAMS_ERROR);
-        }
-
-        int current = commentQueryRequest.getCurrent();
-        int size = commentQueryRequest.getPageSize();
-        ThrowUtils.throwIf(size > 20, ResponseCodeEnum.PARAMS_ERROR);
-        PageInfo<CommentAnswer> page = commentAnswerService.listConmmentByPage(current, size, commentQueryRequest.getAnswerId());
-        return ResultUtils.success(page);
-    }
-
-    /**
-     * 获取副评论
-     *
-     * @param replyCommentId
-     * @return
-     */
-    @GetMapping("/list/reply/comment")
-    public BaseResponse<List<CommentReply>> listReplyConmment(long replyCommentId) {
-        if (replyCommentId < 0) {
-            throw new BusinessException(ResponseCodeEnum.PARAMS_ERROR);
-        }
-        List<CommentReply> list = commentReplyService.replyCommentList(replyCommentId);
-        return ResultUtils.success(list);
-    }
 
     /**
      * 根据 id 获取不脱敏的数据
@@ -218,20 +125,7 @@ public class QuestionController {
         return ResultUtils.success(question);
     }
 
-    /**
-     * 更具题解id获取题解
-     *
-     * @param answerId
-     * @return
-     */
 
-    @GetMapping("/answer/get")
-    public BaseResponse<QuestionAnswer> getAnswerById(Long answerId) {
-        if (answerId <= 0) throw new BusinessException(ResponseCodeEnum.PARAMS_ERROR);
-        QuestionAnswer questionAnswer = questionAnswerService.getAnswerByAnswerId(answerId);
-        if (questionAnswer == null) throw new BusinessException(ResponseCodeEnum.NOT_FOUND_ERROR);
-        return ResultUtils.success(questionAnswer);
-    }
 
     /**
      * 分页获取列表（封装类）

@@ -30,5 +30,4 @@ public class EasyExcelTest {
                 .doReadSync();
         System.out.println(list);
     }
-
 }

@@ -71,6 +71,7 @@ public class QuestionAnswer implements Serializable {
     /**
      * 发表答案的用户
      */
+    @TableField(exist = false)
     private User user;
 
 
@@ -78,6 +79,12 @@ public class QuestionAnswer implements Serializable {
      * 逻辑删除
      */
     private Integer isDelete;
+
+    /**
+     * 该题解是否被某个用户点过赞
+     */
+    @TableField(exist = false)
+    private Boolean isLike;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;

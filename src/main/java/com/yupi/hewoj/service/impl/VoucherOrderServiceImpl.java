@@ -69,6 +69,7 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
 
     //异步处理线程池
     private static final ExecutorService SECKILL_ORDER_EXECUTOR = Executors.newSingleThreadExecutor();
+    //阻塞队列
     private BlockingQueue<VoucherOrder> orderTasks = new ArrayBlockingQueue<>(1024 * 1024);
 
     //在类初始化之后执行，因为当这个类初始化好了之后，随时都是有可能要执行的
@@ -144,6 +145,7 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         voucherOrder.setId(orderId);
         voucherOrder.setUserId(userId);
         voucherOrder.setVoucherId(voucherId);
+        //将订单信息提交到阻塞队列中
         orderTasks.add(voucherOrder);
         proxy = (VoucherOrderService)AopContext.currentProxy();
         return orderId;
@@ -176,8 +178,6 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         save(voucherOrder);
 
     }
-
-
 
     /**
      * 秒杀优惠卷

@@ -2,7 +2,7 @@ package com.yupi.hewoj.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.yupi.hewoj.model.entity.QuestionAnswer;
-import com.yupi.hewoj.model.entity.QuestionAnswerOne;
+import com.yupi.hewoj.model.entity.QuestionAnswer;
 import org.apache.ibatis.annotations.Param;
 
 /**
@@ -11,7 +11,7 @@ import org.apache.ibatis.annotations.Param;
 * @createDate 2024-04-24 18:58:15
 * @Entity generator.domain.QuestionAnswer
 */
-public interface QuestionAnswerMapper extends BaseMapper<QuestionAnswerOne> {
+public interface QuestionAnswerMapper extends BaseMapper<QuestionAnswer> {
 
 
     QuestionAnswer getAnswerByAnswerId(@Param("answerId") long answerId);

@@ -18,8 +18,9 @@
         <result property="title" column="title" jdbcType="VARCHAR"/>
         <association property="user" javaType="com.yupi.hewoj.model.entity.User">
             <result property="userName" column="userName" jdbcType="VARCHAR"/>
+            <result property="userAccount" column="userAccount" jdbcType="VARCHAR"/>
+            <result property="userAvatar" column="userAvatar" jdbcType="VARBINARY"></result>
         </association>
-
     </resultMap>
 
     <sql id="Base_Column_List">
@@ -31,12 +32,10 @@
     </sql>
 
     <select id="getAnswerByAnswerId" resultMap="BaseResultMap">
-        select *
-        from question_answer as t1,
-             user as t2
-        where t1.userId = t2.id
-          and t1.id = #{answerId}
+        select question_answer.*, user.*
+        from user,
+             question_answer
+        where question_answer.userId = user.id
+          and question_answer.id = #{answerId};
     </select>
-
-
 </mapper>

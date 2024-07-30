@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yupi.hewoj.mapper.PostMapper">
+
+    <resultMap id="BaseResultMap" type="com.yupi.hewoj.model.entity.Post">
+        <id property="id" column="id" jdbcType="BIGINT"/>
+        <result property="images" column="images" jdbcType="VARCHAR"/>
+        <result property="content" column="content" jdbcType="VARCHAR"/>
+        <result property="thumbNum" column="thumbNum" jdbcType="INTEGER"/>
+        <result property="favourNum" column="favourNum" jdbcType="INTEGER"/>
+        <result property="userId" column="userId" jdbcType="BIGINT"/>
+        <result property="createTime" column="createTime" jdbcType="TIMESTAMP"/>
+        <result property="updateTime" column="updateTime" jdbcType="TIMESTAMP"/>
+        <result property="isDelete" column="isDelete" jdbcType="TINYINT"/>
+        <association property="user" javaType="com.yupi.hewoj.model.entity.User">
+            <result property="userName" column="userName" jdbcType="VARCHAR"/>
+            <result property="userAccount" column="userAccount" jdbcType="VARCHAR"/>
+            <result property="userAvatar" column="userAvatar" jdbcType="VARBINARY"></result>
+        </association>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id
+        ,images,content,
+        thumbNum,favourNum,userId,
+        createTime,updateTime,isDelete
+    </sql>
+
+    <select id="getPostList" resultMap="BaseResultMap">
+
+        SELECT post.*, user.*, post_thumb.userId
+        FROM post
+                 JOIN user ON post.userId = user.id
+                 LEFT JOIN post_thumb ON post.id = post_thumb
+            .postId
+        WHERE post_thumb.userId = '1744901815402741761'
+           OR post_thumb.userId IS NULL;
+    </select>
+</mapper>

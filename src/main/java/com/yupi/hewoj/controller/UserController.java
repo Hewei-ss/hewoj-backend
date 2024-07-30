@@ -1,9 +1,15 @@
 package com.yupi.hewoj.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.github.pagehelper.PageInfo;
 import com.yupi.hewoj.annotation.AuthCheck;
 import com.yupi.hewoj.common.BaseResponse;
 import com.yupi.hewoj.common.DeleteRequest;
+import com.yupi.hewoj.model.entity.AnswerFavour;
+import com.yupi.hewoj.model.entity.QuestionAnswer;
+import com.yupi.hewoj.model.entity.QuestionSubmit;
 import com.yupi.hewoj.model.enums.ResponseCodeEnum;
 import com.yupi.hewoj.common.ResultUtils;
 import com.yupi.hewoj.constant.UserConstant;
@@ -12,8 +18,12 @@ import com.yupi.hewoj.exception.ThrowUtils;
 import com.yupi.hewoj.model.dto.user.*;
 import com.yupi.hewoj.model.entity.User;
 import com.yupi.hewoj.model.vo.LoginUserVO;
+import com.yupi.hewoj.model.vo.SelfAnswerVO;
 import com.yupi.hewoj.model.vo.UserVO;
+import com.yupi.hewoj.service.AnswerFavourService;
+import com.yupi.hewoj.service.QuestionAnswerService;
 import com.yupi.hewoj.service.UserService;
+import com.yupi.hewoj.service.impl.AnswerFavourServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -21,11 +31,13 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 import java.util.List;
+
+import static com.yupi.hewoj.constant.UserConstant.USER_LOGIN_STATE;
 
 /**
  * 用户接口
- *
  */
 @RestController
 @RequestMapping("/user")
@@ -35,8 +47,12 @@ public class UserController {
     @Resource
     private UserService userService;
 
+    @Resource
+    private AnswerFavourService answerFavourService;
 
-    // region 登录相关
+
+    @Resource
+    private QuestionAnswerService questionAnswerService;
 
     /**
      * 用户注册
@@ -52,10 +68,11 @@ public class UserController {
         String userAccount = userRegisterRequest.getUserAccount();
         String userPassword = userRegisterRequest.getUserPassword();
         String checkPassword = userRegisterRequest.getCheckPassword();
-        if (StringUtils.isAnyBlank(userAccount, userPassword, checkPassword)) {
-          throw new BusinessException(ResponseCodeEnum.PARAMS_ERROR);
+        String userRole = userRegisterRequest.getUserRole();
+        if (StringUtils.isAnyBlank(userAccount, userPassword, checkPassword, userRole)) {
+            throw new BusinessException(ResponseCodeEnum.PARAMS_ERROR);
         }
-        long result = userService.userRegister(userAccount, userPassword, checkPassword);
+        long result = userService.userRegister(userRegisterRequest);
         return ResultUtils.success(result);
     }
 
@@ -155,7 +172,7 @@ public class UserController {
     @PostMapping("/update")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     public BaseResponse<Boolean> updateUser(@RequestBody UserUpdateRequest userUpdateRequest,
-            HttpServletRequest request) {
+                                            HttpServletRequest request) {
         if (userUpdateRequest == null || userUpdateRequest.getId() == null) {
             throw new BusinessException(ResponseCodeEnum.PARAMS_ERROR);
         }
@@ -163,6 +180,28 @@ public class UserController {
         BeanUtils.copyProperties(userUpdateRequest, user);
         boolean result = userService.updateById(user);
         ThrowUtils.throwIf(!result, ResponseCodeEnum.OPERATION_ERROR);
+        return ResultUtils.success(true);
+    }
+
+    /**
+     * 更新用户头像
+     *
+     * @param userAvatar
+     * @param httpServletRequest
+     * @return
+     */
+    @PostMapping("/updateuseravatar")
+    public BaseResponse<Boolean> updateUserAvatar(@RequestParam String userAvatar,
+                                                  HttpServletRequest httpServletRequest) {
+        if (httpServletRequest == null) {
+            throw new BusinessException(ResponseCodeEnum.PARAMS_ERROR);
+        }
+        User user = (User) httpServletRequest.getSession().getAttribute(USER_LOGIN_STATE);
+        if (user == null) throw new BusinessException(ResponseCodeEnum.NOT_LOGIN_ERROR);
+        UpdateWrapper<User> userUpdateWrapper = new UpdateWrapper<>();
+        userUpdateWrapper.eq("id", user.getId());
+        userUpdateWrapper.set("userAvatar", userAvatar);
+        userService.update(userUpdateWrapper);
         return ResultUtils.success(true);
     }
 
@@ -183,6 +222,51 @@ public class UserController {
         ThrowUtils.throwIf(user == null, ResponseCodeEnum.NOT_FOUND_ERROR);
         return ResultUtils.success(user);
     }
+
+
+    /**
+     * 根据用户id分页获取用户收藏的题解
+     *
+     * @param userQueryThumbAnswerRequest
+     * @return
+     */
+
+    @PostMapping("/list/gethtumbanswerlistPage")
+    public BaseResponse<PageInfo<AnswerFavour>> getThumbAnswerListByUserId(@RequestBody UserQueryThumbAnswerRequest userQueryThumbAnswerRequest) {
+        if (userQueryThumbAnswerRequest == null) {
+            throw new BusinessException(ResponseCodeEnum.PARAMS_ERROR);
+        }
+        long size = userQueryThumbAnswerRequest.getPageSize();
+        ThrowUtils.throwIf(size > 20, ResponseCodeEnum.PARAMS_ERROR);
+        PageInfo<AnswerFavour> answerFavourList = answerFavourService.getthumbanswerlistPage(userQueryThumbAnswerRequest);
+        return ResultUtils.success(answerFavourList);
+    }
+
+
+    /**
+     * 用户获取自己的题解
+     *
+     * @param userQuerySelfAnswerRequest
+     * @param httpServletRequest
+     * @return
+     */
+    @PostMapping("/list/getselfanswerlistPage")
+    public BaseResponse<Page<SelfAnswerVO>> getSelfAnswerListPageByUserId(@RequestBody UserQuerySelfAnswerRequest userQuerySelfAnswerRequest, HttpServletRequest httpServletRequest) {
+        if (userQuerySelfAnswerRequest == null) {
+            throw new BusinessException(ResponseCodeEnum.PARAMS_ERROR);
+        }
+        User user = (User) httpServletRequest.getSession().getAttribute(USER_LOGIN_STATE);
+        if (user == null) throw new BusinessException(ResponseCodeEnum.NOT_LOGIN_ERROR);
+        long size = userQuerySelfAnswerRequest.getPageSize();
+        int current = userQuerySelfAnswerRequest.getCurrent();
+        ThrowUtils.throwIf(size > 20, ResponseCodeEnum.PARAMS_ERROR);
+        // 从数据库中查询原始的题目提交分页信息
+        Page<QuestionAnswer> questionAnswerPage = questionAnswerService.page(new Page<>(current, size),
+                questionAnswerService.getQueryWrapperForSelfAnswer(userQuerySelfAnswerRequest, user.getId()));
+        // 返回脱敏信息
+        return ResultUtils.success(questionAnswerService.getSelfAnswersVOPage(questionAnswerPage));
+    }
+
 
     /**
      * 根据 id 获取包装类
@@ -208,7 +292,7 @@ public class UserController {
     @PostMapping("/list/page")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     public BaseResponse<Page<User>> listUserByPage(@RequestBody UserQueryRequest userQueryRequest,
-            HttpServletRequest request) {
+                                                   HttpServletRequest request) {
         long current = userQueryRequest.getCurrent();
         long size = userQueryRequest.getPageSize();
         Page<User> userPage = userService.page(new Page<>(current, size),
@@ -225,7 +309,7 @@ public class UserController {
      */
     @PostMapping("/list/page/vo")
     public BaseResponse<Page<UserVO>> listUserVOByPage(@RequestBody UserQueryRequest userQueryRequest,
-            HttpServletRequest request) {
+                                                       HttpServletRequest request) {
         if (userQueryRequest == null) {
             throw new BusinessException(ResponseCodeEnum.PARAMS_ERROR);
         }
@@ -254,7 +338,7 @@ public class UserController {
      */
     @PostMapping("/update/my")
     public BaseResponse<Boolean> updateMyUser(@RequestBody UserUpdateMyRequest userUpdateMyRequest,
-            HttpServletRequest request) {
+                                              HttpServletRequest request) {
         if (userUpdateMyRequest == null) {
             throw new BusinessException(ResponseCodeEnum.PARAMS_ERROR);
         }

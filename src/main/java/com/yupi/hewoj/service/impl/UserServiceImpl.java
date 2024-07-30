@@ -1,10 +1,12 @@
 package com.yupi.hewoj.service.impl;
 
+import static com.yupi.hewoj.constant.UserConstant.DEFAULT_USER_AVATAR;
 import static com.yupi.hewoj.constant.UserConstant.USER_LOGIN_STATE;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.yupi.hewoj.model.dto.user.UserRegisterRequest;
 import com.yupi.hewoj.model.enums.ResponseCodeEnum;
 import com.yupi.hewoj.constant.CommonConstant;
 import com.yupi.hewoj.exception.BusinessException;
@@ -19,6 +21,7 @@ import com.yupi.hewoj.utils.SqlUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
 
@@ -40,15 +43,30 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      * 盐值，混淆密码
      */
     private static final String SALT = "yupi";
+    // 编译一次，复用Pattern
+    private static final Pattern EMAIL_PATTERN = Pattern.compile(
+            "^[\\w.-]+@[\\w.-]+\\.[A-Za-z]{2,}$"
+    );
 
     @Override
-    public long userRegister(String userAccount, String userPassword, String checkPassword) {
+    public long userRegister(UserRegisterRequest userRegisterRequest) {
+
+        String userAccount=userRegisterRequest.getUserAccount();
+        String userPassword=userRegisterRequest.getUserPassword();
+        String checkPassword=userRegisterRequest.getCheckPassword();
+        String userAvatar = DEFAULT_USER_AVATAR;
+
+
         // 1. 校验
         if (StringUtils.isAnyBlank(userAccount, userPassword, checkPassword)) {
             throw new BusinessException(ResponseCodeEnum.PARAMS_ERROR, "参数为空");
         }
         if (userAccount.length() < 4) {
             throw new BusinessException(ResponseCodeEnum.PARAMS_ERROR, "用户账号过短");
+        }
+        System.out.println(userAccount);
+        if (!EMAIL_PATTERN.matcher(userAccount).matches()){
+            throw new BusinessException(ResponseCodeEnum.PARAMS_ERROR, "用户账号只能是邮箱格式");
         }
         if (userPassword.length() < 8 || checkPassword.length() < 8) {
             throw new BusinessException(ResponseCodeEnum.PARAMS_ERROR, "用户密码过短");
@@ -57,6 +75,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (!userPassword.equals(checkPassword)) {
             throw new BusinessException(ResponseCodeEnum.PARAMS_ERROR, "两次输入的密码不一致");
         }
+
         synchronized (userAccount.intern()) {
             // 账户不能重复
             QueryWrapper<User> queryWrapper = new QueryWrapper<>();
@@ -70,6 +89,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             // 3. 插入数据
             User user = new User();
             user.setUserAccount(userAccount);
+            user.setUserPassword(encryptPassword);
+            BeanUtils.copyProperties(userRegisterRequest, user);
+            user.setUserAvatar(userAvatar);
             user.setUserPassword(encryptPassword);
             boolean saveResult = this.save(user);
             if (!saveResult) {

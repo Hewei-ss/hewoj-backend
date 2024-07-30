@@ -66,7 +66,10 @@ public class JudgeServiceImpl implements JudgeService {
             throw new BusinessException(ResponseCodeEnum.SYSTEM_ERROR, "题目状态更新错误");
         }
         // 4）调用沙箱，获取到执行结果
+        //使用静态工厂模式创建远程代码沙箱
         Codesandbox codesandbox = CodeSandboxFactory.newInstance(type);
+
+        //使用静态代理来代理codesandbox对象，为codesandbox代码沙箱添加一些功能
         codesandbox = new CodeSandboxProxy(codesandbox);
         String language=questionSubmit.getLanguage();
         String code=questionSubmit.getCode();
@@ -75,7 +78,7 @@ public class JudgeServiceImpl implements JudgeService {
         List<JudgeCase> judgeCaseList = JSONUtil.toList(judgeCaseStr, JudgeCase.class);
 
         List<String> inputList=judgeCaseList.stream().map(JudgeCase::getInput).collect(Collectors.toList());
-        //调用沙箱请求对象
+        //创建沙箱请求对象
         ExecuteCodeRequest executeCodeRequest = ExecuteCodeRequest.builder()
                 .code(code)
                 .language(language)

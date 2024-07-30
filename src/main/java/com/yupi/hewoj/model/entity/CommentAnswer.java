@@ -51,6 +51,7 @@ public class CommentAnswer implements Serializable {
      * 是否删除
      */
     private Integer isDelete;
+    @TableField(exist = false)
     private User user;
 
     @TableField(exist = false)

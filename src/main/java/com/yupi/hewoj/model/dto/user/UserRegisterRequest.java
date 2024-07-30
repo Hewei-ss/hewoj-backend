@@ -19,4 +19,11 @@ public class UserRegisterRequest implements Serializable {
     private String userPassword;
 
     private String checkPassword;
+    private String userRole;
+
+    private String userName;
+    private String userAvatar;
+    private String userProfile;
+
+
 }
