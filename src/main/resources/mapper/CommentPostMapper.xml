@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yupi.hewoj.mapper.CommentPostMapper">
+
+    <resultMap id="BaseResultMap" type="com.yupi.hewoj.model.entity.CommentPost">
+        <id property="id" column="id" jdbcType="BIGINT"/>
+        <result property="userId" column="userId" jdbcType="BIGINT"/>
+        <result property="postId" column="postId" jdbcType="BIGINT"/>
+        <result property="commentContent" column="commentContent" jdbcType="VARCHAR"/>
+        <result property="createTime" column="createTime" jdbcType="TIMESTAMP"/>
+        <result property="updateTime" column="updateTime" jdbcType="TIMESTAMP"/>
+        <result property="isDelete" column="isDelete" jdbcType="TINYINT"/>
+        <association property="user" javaType="com.yupi.hewoj.model.entity.User">
+            <result property="userName" column="userName" jdbcType="VARCHAR"/>
+            <result property="userAvatar" column="userAvatar" jdbcType="VARCHAR"></result>
+        </association>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id
+        ,userId,postId,
+        commentContent,createTime,updateTime,
+        isDelete
+    </sql>
+
+
+    <select id="listConmmentPostByPage" resultMap="BaseResultMap">
+        select *
+        from comment_post as t1,
+             user as t2
+        where t1.userId = t2.id
+          and t1.postId = #{postId}
+    </select>
+</mapper>

@@ -12,6 +12,7 @@
         <result property="createTime" column="createTime" jdbcType="TIMESTAMP"/>
         <result property="updateTime" column="updateTime" jdbcType="TIMESTAMP"/>
         <result property="isDelete" column="isDelete" jdbcType="TINYINT"/>
+        <result property="targetUserId" column="targetCommentId" jdbcType="BIGINT"/>
         <association property="user" javaType="com.yupi.hewoj.model.entity.User">
             <result property="userName" column="userName" jdbcType="VARCHAR"/>
         </association>
@@ -28,6 +29,7 @@
         select *
         from comment_reply as t1,
              user as t2
-             where t1.userId=t2.id and targetCommentId=#{targetCommentId}
+        where t1.userId = t2.id
+          and targetCommentId = #{targetCommentId}
     </select>
 </mapper>

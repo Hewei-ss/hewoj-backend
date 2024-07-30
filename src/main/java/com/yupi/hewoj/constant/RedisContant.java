@@ -14,6 +14,8 @@ public interface RedisContant {
 
      String VOUCHER_ORDER="voucher:order:";
      String VOUCHER_ORDER_LOCK="voucher:order:lock:";
+     String ANSWER_LIKE_USERS_KEY="answer:like:users:";
+     String ANSWER_LIKE_COUNT="answer:like:count:";
 
 
 }

@@ -20,6 +20,7 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 import static com.yupi.hewoj.constant.RedisContant.VOUCHER_ORDER;
 import static com.yupi.hewoj.constant.UserConstant.USER_LOGIN_STATE;
@@ -32,6 +33,13 @@ import static com.yupi.hewoj.constant.UserConstant.USER_LOGIN_STATE;
 @Service
 public class SeckillVoucherServiceImpl extends ServiceImpl<SeckillVoucherMapper, SeckillVoucher>
         implements SeckillVoucherService {
+
+    @Resource
+    private SeckillVoucherMapper seckillVoucherMapper;
+    @Override
+    public List<SeckillVoucher> listSecKillVoucher() {
+        return seckillVoucherMapper.listSecKillVoucher();
+    }
 }
 
 

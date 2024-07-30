@@ -36,6 +36,10 @@ public class CommentReply implements Serializable {
      * 被回复的评论Id
      */
     private Long targetCommentId;
+    /**
+     * 被回复人的id
+     */
+    private Long targetUserId;
 
     /**
      * 创建时间

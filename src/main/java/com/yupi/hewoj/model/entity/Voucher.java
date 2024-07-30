@@ -84,7 +84,7 @@ public class Voucher implements Serializable {
     @TableField(exist = false)
     private LocalDateTime beginTime;
 
-    /**
+    /**seckill_voucher
      * 失效时间
      */
     @TableField(exist = false)

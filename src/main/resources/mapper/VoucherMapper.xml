@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yupi.hewoj.mapper.VoucherMapper">
+
+    <resultMap id="BaseResultMap" type="com.yupi.hewoj.model.entity.Voucher">
+            <id property="id" column="id" jdbcType="BIGINT"/>
+            <result property="title" column="title" jdbcType="VARCHAR"/>
+            <result property="sub_title" column="sub_title" jdbcType="VARCHAR"/>
+            <result property="rules" column="rules" jdbcType="VARCHAR"/>
+            <result property="pay_value" column="pay_value" jdbcType="BIGINT"/>
+            <result property="actual_value" column="actual_value" jdbcType="BIGINT"/>
+            <result property="type" column="type" jdbcType="TINYINT"/>
+            <result property="status" column="status" jdbcType="TINYINT"/>
+            <result property="create_time" column="create_time" jdbcType="TIMESTAMP"/>
+            <result property="update_time" column="update_time" jdbcType="TIMESTAMP"/>
+            <result property="isDelete" column="isDelete" jdbcType="TINYINT"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,title,sub_title,
+        rules,pay_value,actual_value,
+        type,status,create_time,
+        update_time,isDelete
+    </sql>
+</mapper>

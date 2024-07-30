@@ -3,6 +3,7 @@ package com.yupi.hewoj.service;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.yupi.hewoj.model.dto.user.UserQueryRequest;
+import com.yupi.hewoj.model.dto.user.UserRegisterRequest;
 import com.yupi.hewoj.model.entity.User;
 import com.yupi.hewoj.model.vo.LoginUserVO;
 import com.yupi.hewoj.model.vo.UserVO;
@@ -20,12 +21,9 @@ public interface UserService extends IService<User> {
     /**
      * 用户注册
      *
-     * @param userAccount   用户账户
-     * @param userPassword  用户密码
-     * @param checkPassword 校验密码
      * @return 新用户 id
      */
-    long userRegister(String userAccount, String userPassword, String checkPassword);
+    long userRegister(UserRegisterRequest userRegisterRequest);
 
     /**
      * 用户登录

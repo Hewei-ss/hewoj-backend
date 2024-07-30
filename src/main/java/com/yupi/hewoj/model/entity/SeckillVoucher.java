@@ -22,6 +22,9 @@ public class SeckillVoucher implements Serializable {
     @TableId
     private Long voucher_id;
 
+    @TableField(exist = false)
+    private Voucher voucher;
+
     /**
      * 库存
      */
