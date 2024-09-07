@@ -1,6 +1,7 @@
 package com.yupi.hewoj.judge;
 
 import cn.hutool.json.JSONUtil;
+import com.yupi.hewoj.model.enums.ExecuteCodeStatusEnum;
 import com.yupi.hewoj.model.enums.ResponseCodeEnum;
 import com.yupi.hewoj.exception.BusinessException;
 import com.yupi.hewoj.judge.codesandbox.CodeSandboxFactory;
@@ -86,18 +87,47 @@ public class JudgeServiceImpl implements JudgeService {
                 .build();
         //沙箱执行
         ExecuteCodeResponse executeCodeResponse = codesandbox.executeCode(executeCodeRequest);
-        //沙箱执行后返回输出
-        List<String> outputList = executeCodeResponse.getOutputList();
 
-        // 5）根据沙箱的执行结果，设置题目的判题状态和信息
-        JudgeContext judgeContext = new JudgeContext();
-        judgeContext.setJudgeInfo(executeCodeResponse.getJudgeInfo());
-        judgeContext.setInputList(inputList);
-        judgeContext.setOutputList(outputList);
-        judgeContext.setJudgeCaseList(judgeCaseList);
-        judgeContext.setQuestion(question);
-        judgeContext.setQuestionSubmit(questionSubmit);
-        JudgeInfo judgeInfo = judgeManager.doJudge(judgeContext);
+
+
+        JudgeInfo judgeInfo=new JudgeInfo();
+        //请求头在代码沙箱中未通过校验
+        if(executeCodeResponse.getStatus()==ExecuteCodeStatusEnum.NO_AUTH.getValue()){
+            judgeInfo.setMessage("无权限");
+        }
+        //如果编译失败
+        else if(executeCodeResponse.getStatus()== ExecuteCodeStatusEnum.COMPILE_FAILED.getValue()){
+            judgeInfo.setMessage("编译失败");
+        }
+        //发生运行时错误
+        else if(executeCodeResponse.getStatus()== ExecuteCodeStatusEnum.RUN_FAILED.getValue()){
+            judgeInfo.setMessage("运行失败");
+            judgeInfo.setMemory(executeCodeResponse.getJudgeInfo().getMemory());
+            judgeInfo.setTime(executeCodeResponse.getJudgeInfo().getTime());
+        }
+        //所有样例运行正常，判断样例输出和正确输出一不一样，判断是否超时
+        else{
+            //沙箱执行后返回输出
+            List<String> outputList = executeCodeResponse.getOutputList();
+
+            // 5）根据沙箱的执行结果，设置题目的判题状态和信息
+            JudgeContext judgeContext = new JudgeContext();
+            //题目的判题信息
+            judgeContext.setJudgeInfo(executeCodeResponse.getJudgeInfo());
+            //设置所有输入样例
+            judgeContext.setInputList(inputList);
+            //沙箱返回的输出
+            judgeContext.setOutputList(outputList);
+            //题目的输入输出样例
+            judgeContext.setJudgeCaseList(judgeCaseList);
+            //题目
+            judgeContext.setQuestion(question);
+            //题目提交记录
+            judgeContext.setQuestionSubmit(questionSubmit);
+            //开始判题
+            judgeInfo = judgeManager.doJudge(judgeContext);
+        }
+
         // 6）修改数据库中的判题结果
         questionSubmitUpdate = new QuestionSubmit();
         questionSubmitUpdate.setId(questionSubmitId);

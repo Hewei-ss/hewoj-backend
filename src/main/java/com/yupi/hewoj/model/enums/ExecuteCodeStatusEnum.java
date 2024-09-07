@@ -1,27 +1,25 @@
 package com.yupi.hewoj.model.enums;
 
+import lombok.Getter;
 import org.apache.commons.lang3.ObjectUtils;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * 题目提交编程语言枚举
- *
- */
-public enum QuestionSubmitLanguageEnum {
+@Getter
+public enum ExecuteCodeStatusEnum {
+    NO_AUTH("无权限", 4),
+    RUN_FAILED("运行失败", 3),
+    COMPILE_FAILED("编译失败", 2),
+    SUCCESS("成功", 1);
 
-    JAVA("java", "java"),
-    CPLUSPLUS("cpp", "cpp"),
-    GOLANG("go", "go");
+    private final String msg;
 
-    private final String text;
+    private final Integer value;
 
-    private final String value;
-
-    QuestionSubmitLanguageEnum(String text, String value) {
-        this.text = text;
+    ExecuteCodeStatusEnum(String msg, Integer value) {
+        this.msg = msg;
         this.value = value;
     }
 
@@ -30,7 +28,7 @@ public enum QuestionSubmitLanguageEnum {
      *
      * @return
      */
-    public static List<String> getValues() {
+    public static List<Integer> getValues() {
         return Arrays.stream(values()).map(item -> item.value).collect(Collectors.toList());
     }
 
@@ -40,23 +38,15 @@ public enum QuestionSubmitLanguageEnum {
      * @param value
      * @return
      */
-    public static QuestionSubmitLanguageEnum getEnumByValue(String value) {
+    public static ExecuteCodeStatusEnum getEnumByValue(Integer value) {
         if (ObjectUtils.isEmpty(value)) {
             return null;
         }
-        for (QuestionSubmitLanguageEnum anEnum : QuestionSubmitLanguageEnum.values()) {
+        for (ExecuteCodeStatusEnum anEnum : ExecuteCodeStatusEnum.values()) {
             if (anEnum.value.equals(value)) {
                 return anEnum;
             }
         }
         return null;
-    }
-
-    public String getValue() {
-        return value;
-    }
-
-    public String getText() {
-        return text;
     }
 }

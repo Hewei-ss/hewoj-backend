@@ -1,6 +1,7 @@
 package com.yupi.hewoj.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.github.benmanes.caffeine.cache.Cache;
 import com.github.pagehelper.PageInfo;
 import com.google.gson.Gson;
 import com.yupi.hewoj.annotation.AuthCheck;
@@ -26,6 +27,7 @@ import com.yupi.hewoj.service.*;
 import com.yupi.hewoj.utils.CacheClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
@@ -59,6 +61,9 @@ public class QuestionController {
 
     @Resource
     private CommentReplyService commentReplyService;
+
+    @Autowired
+    private Cache<Long, QuestionVO> questionVOCache;
 
     private final static Gson GSON = new Gson();
 
