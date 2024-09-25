@@ -13,7 +13,7 @@ import javax.servlet.http.HttpServletRequest;
 */
 public interface VoucherOrderService extends IService<VoucherOrder> {
     
-    long seckillVoucher(Long voucherId, HttpServletRequest httpServletRequest);
+    long  seckillVoucher(Long voucherId, HttpServletRequest httpServletRequest);
 
     void createVoucherOrder(VoucherOrder voucherOrder);
 

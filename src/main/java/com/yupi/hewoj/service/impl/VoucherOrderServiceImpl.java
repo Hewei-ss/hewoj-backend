@@ -69,31 +69,43 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
 
     //异步处理线程池
     private static final ExecutorService SECKILL_ORDER_EXECUTOR = Executors.newSingleThreadExecutor();
-    //阻塞队列
+    private static final ExecutorService SECKILL_ORDER_EXECUTOR_2=Executors.newFixedThreadPool(10);
+
+    private class VoucherOrderHandler implements Runnable{
+        private VoucherOrder voucherOrder;
+        VoucherOrderHandler(VoucherOrder voucherOrder){
+            this.voucherOrder=voucherOrder;
+        }
+        @Override
+        public void run() {
+            handleVoucherOrder(voucherOrder);
+        }
+    }
+    //阻塞队列，当一个线程尝试从 阻塞队列中获取任务时，如果队列中没有任务，则该线程就会阻塞直到队列中有任务该线程才会被唤醒
     private BlockingQueue<VoucherOrder> orderTasks = new ArrayBlockingQueue<>(1024 * 1024);
 
     //在类初始化之后执行，因为当这个类初始化好了之后，随时都是有可能要执行的
-    @PostConstruct
-    private void init() {
-        SECKILL_ORDER_EXECUTOR.submit(new VoucherOrderHandler());
-    }
+//    @PostConstruct
+//    private void init() {
+//        SECKILL_ORDER_EXECUTOR.submit(new VoucherOrderHandler());
+//    }
     // 用于线程池处理的任务
 // 当初始化完毕后，就会去从对列中去拿信息
-    private class VoucherOrderHandler implements Runnable {
-        @Override
-        public void run() {
-            while (true) {
-                try {
-                    // 1.获取队列中的订单信息
-                    VoucherOrder voucherOrder = orderTasks.take();
-                    // 2.创建订单
-                    handleVoucherOrder(voucherOrder);
-                } catch (Exception e) {
-                    log.error("处理订单异常", e);
-                }
-            }
-        }
-    }
+//    private class VoucherOrderHandler implements Runnable {
+//        @Override
+//        public void run() {
+//            while (true) {
+//                try {
+//                    // 1.获取队列中的订单信息
+//                    VoucherOrder voucherOrder = orderTasks.take();
+//                    // 2.创建订单
+//                    handleVoucherOrder(voucherOrder);
+//                } catch (Exception e) {
+//                    log.error("处理订单异常", e);
+//                }
+//            }
+//        }
+//    }
 
     /**
      * 创建订单
@@ -126,7 +138,7 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
 
 
     @Override
-    public long seckillVoucher(Long voucherId, HttpServletRequest httpServletRequest) {
+    public long  seckillVoucher(Long voucherId, HttpServletRequest httpServletRequest) {
         User user = (User) httpServletRequest.getSession().getAttribute(USER_LOGIN_STATE);
         Long userId = user.getId();
         //执行lua脚本
@@ -146,7 +158,9 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         voucherOrder.setUserId(userId);
         voucherOrder.setVoucherId(voucherId);
         //将订单信息提交到阻塞队列中
-        orderTasks.add(voucherOrder);
+//        orderTasks.add(voucherOrder);
+        SECKILL_ORDER_EXECUTOR_2.submit(new VoucherOrderHandler(voucherOrder));
+
         proxy = (VoucherOrderService)AopContext.currentProxy();
         return orderId;
     }

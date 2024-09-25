@@ -95,6 +95,9 @@ public class JudgeServiceImpl implements JudgeService {
         if(executeCodeResponse.getStatus()==ExecuteCodeStatusEnum.NO_AUTH.getValue()){
             judgeInfo.setMessage("无权限");
         }
+        else if(executeCodeResponse.getStatus()==ExecuteCodeStatusEnum.RUN_PROHIBIT.getValue()){
+            judgeInfo.setMessage("包含违禁词，禁止执行");
+        }
         //如果编译失败
         else if(executeCodeResponse.getStatus()== ExecuteCodeStatusEnum.COMPILE_FAILED.getValue()){
             judgeInfo.setMessage("编译失败");

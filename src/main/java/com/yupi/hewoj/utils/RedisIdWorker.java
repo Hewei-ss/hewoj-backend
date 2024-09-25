@@ -37,8 +37,9 @@ public class RedisIdWorker {
         //2.自增生成32位序列号
         long count=stringRedisTemplate.opsForValue().increment("icr:"+keyPrefix+statisticalUnit);
         return time_timestamp<<32 | count;
-    }
 
+        //在redis中存储"icr:"+keyPrefix+statisticalUnit)为key，值为 time_timestamp<<32 | count;
+    }
 
     /**
      * 生成基准时间

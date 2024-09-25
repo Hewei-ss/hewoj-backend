@@ -41,6 +41,7 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher>
         seckillVoucher.setStock(voucher.getStock());
         seckillVoucher.setBegin_time(voucher.getBeginTime());
         seckillVoucher.setEnd_time(voucher.getEndTime());
+        //将秒杀卷的库存保存到redis中
         boolean ch2=seckillVoucherService.save(seckillVoucher);
         stringRedisTemplate.opsForValue().set(SECKILL_STOCK_KEY+voucher.getId(),voucher.getStock().toString());
         return ch2&&ch1;

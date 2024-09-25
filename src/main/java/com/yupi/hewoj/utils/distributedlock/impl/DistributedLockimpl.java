@@ -26,7 +26,7 @@ public class DistributedLockimpl implements DistributedLock {
      * 将unlock的lua申明无畏静态的，这样避免每次调用的时候都去lua脚本文件中读取lua脚本，避免频繁io浪费时间
      */
     private static final DefaultRedisScript<Long> UNLOCK_SCRIPT;
-    //在静态代码框中初始化UNLOCK_SCRIPT
+    //在静态代码框中初始化UNLOCK_SCRIPT，防止每次调用lua脚本都要进行oi读取lua脚本
     static {
         UNLOCK_SCRIPT = new DefaultRedisScript<>();
         UNLOCK_SCRIPT.setLocation(new ClassPathResource("unlock.lua"));
@@ -41,6 +41,7 @@ public class DistributedLockimpl implements DistributedLock {
         if(success==false){
             throw new BusinessException(ResponseCodeEnum.NO_AUTH_ERROR,"不能重复下单");
         }
+        //spring 自动拆箱可能会发生空指针异常
         return Boolean.TRUE.equals(success);
     }
 
