@@ -52,7 +52,7 @@ public class MinioController
             // todo 完善类型校验逻辑
             String contentType = file.getContentType();  //类型
             minioService.uploadObject(is, newFileName, contentType);
-            return ResultUtils.success("http://192.168.68.132:9000/hewoj-minio/"+newFileName);
+            return ResultUtils.success("http://127.0.0.1:9000/hewoj-minio/"+newFileName);
         } catch (Exception e)
         {
             throw new BusinessException(ResponseCodeEnum.OPERATION_ERROR, "上传失败");

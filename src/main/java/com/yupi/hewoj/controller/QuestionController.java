@@ -152,8 +152,6 @@ public class QuestionController {
                 questionService.getQueryWrapper(questionQueryRequest));
         return ResultUtils.success(questionService.getQuestionVOPage(questionPage, request));
     }
-
-
     /**
      * 删除
      *

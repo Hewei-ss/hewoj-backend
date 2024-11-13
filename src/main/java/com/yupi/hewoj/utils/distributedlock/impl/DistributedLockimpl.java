@@ -35,6 +35,7 @@ public class DistributedLockimpl implements DistributedLock {
 
     @Override
     public Boolean tryLock(String keyPrefix,long voucherId,long userId,long timeout, TimeUnit unit) {
+        //当前线程
         long currentThreadId = Thread.currentThread().getId();
         String value=ID_PREFIX+currentThreadId;
         Boolean success = stringRedisTemplate.opsForValue().setIfAbsent(keyPrefix+voucherId+":" + userId, value, timeout, unit);
@@ -44,7 +45,6 @@ public class DistributedLockimpl implements DistributedLock {
         //spring 自动拆箱可能会发生空指针异常
         return Boolean.TRUE.equals(success);
     }
-
     /**
      * 使用lua脚本文件保证查询和删除redis中的key的两个操作的原子性
      * @param keyPrefix

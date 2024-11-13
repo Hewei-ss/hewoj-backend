@@ -5,10 +5,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import javax.annotation.Resource;
 
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
@@ -17,6 +18,12 @@ class RedisIdWorkerTest {
     RedisIdWorker redisIdWorker;
 
     private ExecutorService es = Executors.newFixedThreadPool(500);
+
+    @Test
+    void test(){
+        long time_timestamp=24713483;
+        System.out.println( time_timestamp<<32 | 2);
+    }
 
 
 //    @Test

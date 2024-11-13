@@ -27,7 +27,7 @@ public interface UserConstant {
      * 被封号
      */
     String BAN_ROLE = "ban";
-    String DEFAULT_USER_AVATAR="http://192.168.68.132:9000/hewoj-minio/defaultUserAvatar.jpg";
+    String DEFAULT_USER_AVATAR="http://127.0.0.1:9000/hewoj-minio/defaultUserAvatar.jpg";
 
     // endregion
 }

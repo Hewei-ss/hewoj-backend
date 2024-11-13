@@ -64,7 +64,7 @@ pagehelper:
 codesandbox:
   type: remote
 minio:
-  endpoint: http://192.168.68.132:9000
-  accessKey: minio_root
-  secretKey: minio_123456
+  endpoint: http://127.0.0.1:9000
+  accessKey: admin
+  secretKey: 12345678
   bucketName: hewoj-minio

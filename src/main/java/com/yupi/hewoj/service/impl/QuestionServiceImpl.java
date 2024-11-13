@@ -180,7 +180,6 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question>
        //  Question question=cacheClient.queryWithLogicalExpire(RedisContant.REDIS_QUESTION_CACHE_KEY,id,this::getById,Question.class,20L, TimeUnit.MINUTES);
         return question;
     }
-
 }
 
 

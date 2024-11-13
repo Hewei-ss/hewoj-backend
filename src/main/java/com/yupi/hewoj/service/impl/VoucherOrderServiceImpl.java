@@ -139,6 +139,9 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
 
     @Override
     public long  seckillVoucher(Long voucherId, HttpServletRequest httpServletRequest) {
+
+
+
         User user = (User) httpServletRequest.getSession().getAttribute(USER_LOGIN_STATE);
         Long userId = user.getId();
         //执行lua脚本
@@ -164,7 +167,6 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         proxy = (VoucherOrderService)AopContext.currentProxy();
         return orderId;
     }
-
     @Override
     @Transactional
     public  void createVoucherOrder(VoucherOrder voucherOrder) {

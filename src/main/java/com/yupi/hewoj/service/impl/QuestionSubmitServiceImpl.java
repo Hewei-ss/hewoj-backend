@@ -28,8 +28,11 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
+
+import static ch.qos.logback.core.CoreConstants.CORE_POOL_SIZE;
+import static ch.qos.logback.core.CoreConstants.MAX_POOL_SIZE;
 
 @Service
 public class QuestionSubmitServiceImpl extends ServiceImpl<QuestionSubmitMapper, QuestionSubmit>
@@ -46,6 +49,44 @@ public class QuestionSubmitServiceImpl extends ServiceImpl<QuestionSubmitMapper,
     // todo 为什么@Lazy能解决循环依赖的问题
     @Lazy
     private JudgeService judgeService;
+
+    //通过ThreadPoolExecutor构造函数自定义参数创建
+
+    private static final int CORE_POOL_SIZE = 2;
+    private static final int MAX_POOL_SIZE = 2;
+    private static final int QUEUE_CAPACITY = 100;
+    private static final Long KEEP_ALIVE_TIME = 1L;
+    private static final ThreadPoolExecutor executor = new ThreadPoolExecutor(
+            CORE_POOL_SIZE,
+            MAX_POOL_SIZE,
+            KEEP_ALIVE_TIME,
+            TimeUnit.SECONDS,
+            new ArrayBlockingQueue<>(QUEUE_CAPACITY),
+            new ThreadPoolExecutor.CallerRunsPolicy());
+    class Task implements Runnable{
+        private long questionSubmitId;
+
+        public long getQuestionSubmitId() {
+            return questionSubmitId;
+        }
+
+        Task(long questionSubmitId){
+            this.questionSubmitId=questionSubmitId;
+        }
+
+        @Override
+        public void run() {
+            System.out.print("阻塞队列为：");
+           for(Runnable task:executor.getQueue()){
+               if (task instanceof Task) { // 确保是 Task 类型
+                   System.out.print(((Task) task).getQuestionSubmitId()+" ");
+               }
+           }
+            System.out.println();
+            judgeService.doJudge(questionSubmitId);
+
+        }
+    }
 
     /**
      * 提交题目
@@ -76,7 +117,7 @@ public class QuestionSubmitServiceImpl extends ServiceImpl<QuestionSubmitMapper,
         questionSubmit.setQuestionId(questionId);
         questionSubmit.setCode(questionSubmitAddRequest.getCode());
         questionSubmit.setLanguage(language);
-        // 设置初始状态为判题中
+        // 设置初始状态为等待中
         questionSubmit.setStatus(QuestionSubmitStatusEnum.WAITING.getValue());
         questionSubmit.setJudgeInfo("{}");
         boolean save = this.save(questionSubmit);
@@ -84,10 +125,14 @@ public class QuestionSubmitServiceImpl extends ServiceImpl<QuestionSubmitMapper,
             throw new BusinessException(ResponseCodeEnum.SYSTEM_ERROR, "数据插入失败");
         }
         Long questionSubmitId = questionSubmit.getId();
+
         //todo 执行判题服务,异步任务
-        CompletableFuture.runAsync(() -> {
-            judgeService.doJudge(questionSubmitId);
-        });
+//        CompletableFuture.runAsync(() -> {
+//            judgeService.doJudge(questionSubmitId);
+//        },executor);
+        //提交到线程池
+        executor.execute(new Task(questionSubmitId));
+
         return questionSubmitId;
     }
     /**

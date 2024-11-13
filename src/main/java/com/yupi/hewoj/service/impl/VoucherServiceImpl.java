@@ -8,10 +8,25 @@ import com.yupi.hewoj.model.entity.SeckillVoucher;
 import com.yupi.hewoj.model.entity.Voucher;
 import com.yupi.hewoj.service.SeckillVoucherService;
 import com.yupi.hewoj.service.VoucherService;
+import com.yupi.hewoj.utils.BloomFilterUtil;
 import freemarker.cache.StringTemplateLoader;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import org.redisson.api.RBloomFilter;
+import org.redisson.api.RedissonClient;
+import org.redisson.client.codec.StringCodec;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.stereotype.Service;
+
+import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
+import java.util.List;
+import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Resource;
 
@@ -31,6 +46,7 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher>
 
     @Resource
     private StringRedisTemplate stringRedisTemplate;
+
 
     @Override
     @Transactional

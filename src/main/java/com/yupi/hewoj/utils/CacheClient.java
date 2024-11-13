@@ -7,17 +7,29 @@ import cn.hutool.json.JSONUtil;
 import com.yupi.hewoj.common.RedisData;
 import com.yupi.hewoj.constant.RedisContant;
 import com.yupi.hewoj.model.entity.Question;
+import com.yupi.hewoj.model.entity.Voucher;
 import lombok.extern.slf4j.Slf4j;
+import org.redisson.api.RBloomFilter;
+import org.redisson.api.RedissonClient;
+import org.redisson.client.codec.StringCodec;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.sql.Time;
 import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.List;
+import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import static com.yupi.hewoj.constant.RedisContant.CACHE_NULL_TTL;
 
@@ -31,8 +43,6 @@ public class CacheClient {
     @Resource
     private StringRedisTemplate stringRedisTemplate;
     private static final ExecutorService CACHE_REBUILD_EXECUTOR = Executors.newFixedThreadPool(10);
-
-
     /**
      * 根据指定的key查询缓存，并反序列化为指定类型，利用缓存空值的方式解决缓存穿透问题，使用互斥锁解决缓存击穿问题
      * @param keyPrefix 缓存业务前缀
@@ -45,7 +55,7 @@ public class CacheClient {
      * @param <R>
      * @param <T>
      */
-    public <R,T> R queryWithPassThrough(String keyPrefix,T id,Class<R> type,Function<T,R> dbFallback,Long time,TimeUnit unit){
+    public <R,T> R queryWithPassThrough(String keyPrefix, T id, Class<R> type, Function<T,R> dbFallback, Long time, TimeUnit unit){
         String key=keyPrefix+id;
        String json=stringRedisTemplate.opsForValue().get(key);
        //查找到后反序列华为执行类型，然后返回
